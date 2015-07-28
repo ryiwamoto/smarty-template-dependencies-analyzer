@@ -1,6 +1,6 @@
 <?php
 
-namespace smartydeps;
+namespace Smartydeps;
 
 class Compiler
 {

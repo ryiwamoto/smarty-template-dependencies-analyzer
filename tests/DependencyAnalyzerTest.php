@@ -8,7 +8,7 @@ class DependencyAnalyzerTest extends PHPUnit_Framework_TestCase
         $template_variables = [
             '$setting.test.foo' => ['test']
         ];
-        $analyzer = new \smartydeps\DependencyAnalyzer($template_dir, null, $template_variables, "/.+\\.tpl$/");
+        $analyzer = new \Smartydeps\DependencyAnalyzer($template_dir, null, $template_variables, "/.+\\.tpl$/");
         $result = $analyzer->analyze();
         $this->assertEquals("hoge/foo.tpl", $result[0]->from);
         $this->assertEquals(0, count($result[0]->to));

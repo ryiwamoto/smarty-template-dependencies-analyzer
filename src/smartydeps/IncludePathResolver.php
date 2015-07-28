@@ -1,5 +1,5 @@
 <?php
-namespace smartydeps;
+namespace Smartydeps;
 
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
 
