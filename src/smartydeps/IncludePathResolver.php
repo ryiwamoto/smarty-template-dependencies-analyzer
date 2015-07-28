@@ -1,8 +1,6 @@
 <?php
 namespace Smartydeps;
 
-use Doctrine\Instantiator\Exception\InvalidArgumentException;
-
 class IncludePathResolver
 {
     /** @var string */
@@ -42,7 +40,7 @@ class IncludePathResolver
     private function resolveVariable($variable)
     {
         if (!isset($this->template_variables[$variable])) {
-            throw new InvalidArgumentException("$variable is not defined.");
+            throw new \InvalidArgumentException("$variable is not defined.");
         }
         return $this->template_variables[$variable];
     }
