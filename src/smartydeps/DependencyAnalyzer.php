@@ -15,25 +15,29 @@ class DependencyAnalyzer
     /** @var Compiler */
     private $compiler;
 
+    /** @var string */
+    private $template_pattern;
+
     /**
      * @param string $template_dir
      * @param string $plugins_dir
      * @param array $template_variables
+     * @param string $template_pattern
      */
-    public function __construct($template_dir, $plugins_dir = null, $template_variables = [])
+    public function __construct($template_dir, $plugins_dir = null, $template_variables = [], $template_pattern = '/.*/')
     {
         $this->template_dir = $template_dir;
         $this->compiler = new Compiler($template_dir, $plugins_dir);
         $this->include_path_resolver = new IncludePathResolver($template_dir, $template_variables);
+        $this->template_pattern = $template_pattern;
     }
 
     /**
-     * @param string $template_pattern
      * @return array
      */
-    public function analyze($template_pattern = '/.*/')
+    public function analyze()
     {
-        $templates = $this->getTemplateFilesRecursive($template_pattern);
+        $templates = $this->getTemplateFilesRecursive($this->template_pattern);
         $compiled_templates = $this->compileAllTemplates($templates);
         return $this->getDependencyLists($compiled_templates);
     }
