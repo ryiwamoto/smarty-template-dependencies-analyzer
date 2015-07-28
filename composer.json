@@ -1,0 +1,22 @@
+{
+    "name": "ryiwamoto/smarty-test",
+    "authors": [{
+        "name": "ryiwamoto",
+        "email": "konnpekigan@gmail.com"
+    }],
+    "require": {
+        "smarty/smarty": "~2.6",
+        "phine/path": "~1.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    },
+    "scripts": {
+        "test": "php ./vendor/bin/phpunit --bootstrap vendor/autoload.php ./tests"
+    }
+}
