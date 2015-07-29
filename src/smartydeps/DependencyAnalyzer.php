@@ -39,7 +39,7 @@ class DependencyAnalyzer
     {
         $templates = $this->getTemplateFilesRecursive($this->template_pattern);
         $compiled_templates = $this->compileAllTemplates($templates);
-        return $this->getDependencyLists($compiled_templates);
+        return $this->getAnalysisResult($compiled_templates);
     }
 
     /**
@@ -71,17 +71,21 @@ class DependencyAnalyzer
 
     /**
      * @param CompiledTemplate[] $compiled_templates
-     * @return array
+     * @return AnalysisResult
      */
-    private function getDependencyLists(array $compiled_templates)
+    private function getAnalysisResult(array $compiled_templates)
     {
-        $dependency_nodes = [];
+        $incoming = new DependencyNodes();
+        $outgoing = new DependencyNodes();
+
         foreach ($compiled_templates as $compiled_template) {
             $smarty_include_parser = new SmartyIncludeParser($this->include_path_resolver);
-            $to = $smarty_include_parser->parse($compiled_template->compiled_content);
-            $dependency_node = new DependencyNode($compiled_template->relative_path, $to);
-            $dependency_nodes[] = $dependency_node;
+            $include_files = $smarty_include_parser->parse($compiled_template->compiled_content);
+            foreach ($include_files as $file) {
+                $incoming->add($file, $compiled_template->relative_path);
+            }
+            $outgoing->add($compiled_templates, $include_files);
         }
-        return $dependency_nodes;
+        return new AnalysisResult($incoming, $outgoing);
     }
 }
