@@ -33,7 +33,7 @@ class DependencyAnalyzer
     }
 
     /**
-     * @return array
+     * @return AnalysisResult
      */
     public function analyze()
     {
@@ -79,12 +79,13 @@ class DependencyAnalyzer
         $outgoing = new DependencyNodes();
 
         foreach ($compiled_templates as $compiled_template) {
+            $template_name = $compiled_template->relative_path;
             $smarty_include_parser = new SmartyIncludeParser($this->include_path_resolver);
             $include_files = $smarty_include_parser->parse($compiled_template->compiled_content);
             foreach ($include_files as $file) {
-                $incoming->add($file, $compiled_template->relative_path);
+                $incoming->add($file, $template_name);
             }
-            $outgoing->add($compiled_templates, $include_files);
+            $outgoing->add($template_name, $include_files);
         }
         return new AnalysisResult($incoming, $outgoing);
     }

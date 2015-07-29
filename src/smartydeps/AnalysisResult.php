@@ -42,4 +42,12 @@ class AnalysisResult
     {
         return $this->incoming->get($name);
     }
+
+    /**
+     * @return string[]
+     */
+    public function getFileNames()
+    {
+        return $this->all_files;
+    }
 }

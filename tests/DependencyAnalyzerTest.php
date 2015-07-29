@@ -6,14 +6,17 @@ class DependencyAnalyzerTest extends PHPUnit_Framework_TestCase
     {
         $template_dir = realpath(__DIR__ . "/templates");
         $template_variables = [
-            '$setting.test.foo' => ['test']
+            '$setting.test.foo' => ['test.tpl']
         ];
         $analyzer = new \Smartydeps\DependencyAnalyzer($template_dir, null, $template_variables, "/.+\\.tpl$/");
         $result = $analyzer->analyze();
-        $this->assertEquals("hoge/foo.tpl", $result[0]->from);
-        $this->assertEquals(0, count($result[0]->to));
+        $this->assertEquals($result->getFilesDependsOn("hoge/foo.tpl"), []);
+        $this->assertEquals($result->getFilesDependsOn("test.tpl"), ['index.tpl']);
+        $this->assertEquals($result->getFilesDependsOn("hogehoge.tpl"), ['index.tpl']);
 
-        $this->assertEquals("index.tpl", $result[1]->from);
-        $this->assertEquals(["hogehoge.tpl", 'test'], $result[1]->to);
+        $this->assertEquals($result->getFilesIncludedBy("index.tpl"), [
+            'hogehoge.tpl', 'test.tpl'
+        ]);
+        $this->assertEquals($result->getFilesIncludedBy("hoge/foo.tpl"), []);
     }
 }
