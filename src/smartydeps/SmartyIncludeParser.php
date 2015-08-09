@@ -1,6 +1,9 @@
 <?php
 namespace Smartydeps;
 
+use Smartydeps\ast\ASTKind;
+use Smartydeps\ast\ASTWalker;
+
 class SmartyIncludeParser extends ASTWalker
 {
     /** @var string[] $includes */
@@ -9,9 +12,43 @@ class SmartyIncludeParser extends ASTWalker
     /** @var IncludePathResolver */
     private $path_resolver = null;
 
+    /** @var VariableNameMap */
+    private $variable_name_map = null;
+
     public function __construct(IncludePathResolver $resolver)
     {
+        parent::__construct();
         $this->path_resolver = $resolver;
+        $this->variable_name_map = new VariableNameMap();
+    }
+
+    protected function enter($node)
+    {
+        if ($node->kind === ASTKind::AST_ASSIGN) {
+            $assign_from = $this->toVarName($node->children[0]);
+            $assign_to = $this->toVarName($node->children[1]);
+            $resolved_assign_to = $this->variable_name_map->resolve($assign_to);
+            if ($assign_from === '$this->_tpl_vars' || $assign_from === '$_smarty_tpl_vars') { //FIXME
+                return;
+            }
+            $this->variable_name_map->addAlias($assign_from, $resolved_assign_to);
+        } else if ($node->kind === ASTKind::AST_FOREACH) {
+            $assign_from = $this->toVarName($node->children[1]);
+            $assign_to = $this->toVarName($node->children[0]);
+            $resolved_assign_to = $this->variable_name_map->resolve($assign_to);
+            $this->variable_name_map->addAlias($assign_from, $resolved_assign_to);
+        }
+    }
+
+    protected function leave($node)
+    {
+        if ($node->kind === ASTKind::AST_UNSET) {
+            $unset_target = $this->toVarName($node->children[0]);
+            $this->variable_name_map->deleteAlias($unset_target);
+        } else if ($node->kind === ASTKind::AST_FOREACH) {
+            $unset_target = $this->toVarName($node->children[0]);
+            $this->variable_name_map->deleteAlias($unset_target);
+        }
     }
 
     /**
@@ -30,26 +67,13 @@ class SmartyIncludeParser extends ASTWalker
     protected function visit($node)
     {
         if (
-            $node->kind === 768 /* method call*/
-            && $node->children[0]->kind === 256 && $node->children[0]->children[0] === "this"
+            $node->kind === ASTKind::AST_METHOD_CALL
+            && $node->children[0]->kind === ASTKind::AST_VAR && $node->children[0]->children[0] === "this"
             && $node->children[1] === "_smarty_include"
         ) {
-            $template_name = $this->getTemplateName($node->children[2]->children[0]->children[0]);
-            $this->includes = array_merge($this->includes, $this->path_resolver->resolve($template_name));
-        }
-    }
-
-    private function getTemplateName($node)
-    {
-        if (is_string($node)) {
-            return $node;
-        } else if ($node->kind === 525 /* AST_ARRAY_ELEM */) {
-            return $this->getTemplateName($node->children[0]);
-        } else if ($node->kind === 512 /* AST_DIM */) {
-            $prev = $node->children[0]->kind === 513 ? "$" : $this->getTemplateName($node->children[0]) . ".";
-            return $prev . $node->children[1];
-        } else {
-            return "";
+            $name = $this->toVarName($node->children[2]->children[0]->children[0]);
+            $real_variable_name = $this->variable_name_map->resolve($name);
+            $this->includes = array_merge($this->includes, $this->path_resolver->resolve($real_variable_name));
         }
     }
 }
