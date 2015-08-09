@@ -9,6 +9,9 @@ class VariableNameMap
     {
         $alias = $this->resolve($alias_name);
         $real = $this->resolve($real_name);
+        if($alias === ''){
+            return;
+        }
         $this->map[$alias] = $real;
     }
 

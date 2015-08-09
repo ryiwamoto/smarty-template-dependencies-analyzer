@@ -48,16 +48,13 @@ abstract class ASTWalker
             return $this->toVarName($node->children[0]);
         } else if ($node->kind === ASTKind::AST_DIM) {
             $prev = $node->children[0]->kind === ASTKind::AST_PROP ? "$" : $this->toVarName($node->children[0]) . '.';
-            return $prev . $node->children[1];
+            return $prev . $this->toVarName($node->children[1]);
         } else if ($node->kind === ASTKind::AST_PROP) {
             return $this->toVarName($node->children[0]) . '->' . $this->toVarName($node->children[1]);
         } else if ($node->kind === ASTKind::AST_VAR) {
             return "$" . $this->toVarName($node->children[0]);
-        } else if ($node === NULL) {
-            return '';
         } else {
-            var_dump($node);
-            throw new \InvalidArgumentException("cannot convert node to string");
+            return '';
         }
     }
 }
