@@ -3,19 +3,14 @@ namespace Smartydeps;
 
 class IncludePathResolver
 {
-    /** @var string */
-    private $template_dir;
-
     /** @var array */
     private $template_variables;
 
     /**
-     * @param string $template_path
      * @param array $template_variables
      */
-    public function __construct($template_path, $template_variables)
+    public function __construct($template_variables)
     {
-        $this->template_dir = $template_path;
         $this->template_variables = $template_variables;
     }
 

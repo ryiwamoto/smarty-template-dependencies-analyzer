@@ -9,17 +9,17 @@ class DependencyAnalyzer
     /** @var string */
     private $template_dir;
 
+    /** @var string */
+    private $plugins_dir;
+
     /** @var IncludePathResolver */
     private $include_path_resolver;
-
-    /** @var Compiler */
-    private $compiler;
 
     /** @var string */
     private $template_pattern;
 
     /**
-     * @param string $template_dir
+     * @param array $template_dir
      * @param string $plugins_dir
      * @param array $template_variables
      * @param string $template_pattern
@@ -27,8 +27,8 @@ class DependencyAnalyzer
     public function __construct($template_dir, $plugins_dir = null, $template_variables = [], $template_pattern = '/.*/')
     {
         $this->template_dir = $template_dir;
-        $this->compiler = new Compiler($template_dir, $plugins_dir);
-        $this->include_path_resolver = new IncludePathResolver($template_dir, $template_variables);
+        $this->plugins_dir = $plugins_dir;
+        $this->include_path_resolver = new IncludePathResolver($template_variables);
         $this->template_pattern = $template_pattern;
     }
 
@@ -37,19 +37,31 @@ class DependencyAnalyzer
      */
     public function analyze()
     {
-        $templates = $this->getTemplateFilesRecursive($this->template_pattern);
-        $compiled_templates = $this->compileAllTemplates($templates);
+        $compiled_templates = [];
+        foreach ($this->template_dir as $template_dir) {
+            $compiled_templates = array_merge($compiled_templates, $this->compileAllTemplates($template_dir));
+        }
         return $this->getAnalysisResult($compiled_templates);
     }
 
+    private function compileAllTemplates($template_dir)
+    {
+        $compiler = new Compiler($template_dir, $this->plugins_dir);
+        $templates = $this->getTemplateFilesRecursive($template_dir);
+        return array_map(function ($template) use ($compiler) {
+            return $compiler->compile($template);
+        }, $templates);
+    }
+
     /**
-     * @param string $template_pattern
+     * @param string $template_dir
      * @return array
      */
-    private function getTemplateFilesRecursive($template_pattern)
+    private function getTemplateFilesRecursive($template_dir)
     {
+        $template_pattern = $this->template_pattern;
         $files = array();
-        $itr = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->template_dir));
+        $itr = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($template_dir));
         foreach ($itr as $file) {
             if ($file->isDir()) {
                 continue;
@@ -60,13 +72,6 @@ class DependencyAnalyzer
             }
         }
         return $files;
-    }
-
-    private function compileAllTemplates($templates)
-    {
-        return array_map(function ($template) {
-            return $this->compiler->compile($template);
-        }, $templates);
     }
 
     /**

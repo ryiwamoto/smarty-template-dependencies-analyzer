@@ -4,7 +4,7 @@ class DependencyAnalyzerTest extends PHPUnit_Framework_TestCase
 {
     public function test()
     {
-        $template_dir = realpath(__DIR__ . "/templates");
+        $template_dir = [realpath(__DIR__ . "/templates")];
         $template_variables = [
             '$setting.test.foo' => ['test.tpl'],
             '$setting.foo.bar' => ['foreach.tpl']
